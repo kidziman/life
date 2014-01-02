@@ -1,5 +1,5 @@
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
@@ -9,6 +9,10 @@
 %% oblicza now¹ tablicê - napis , L - stara tablica - napis,
 %% Length - d³ugoœæ wiersza tablicy, C - aktualny indeks ( zaczyna siê od najwiekszego)
 
+%%generuje losow¹ planszê
+generujTab(L) ->
+	[random:uniform(2)+47 || _ <- lists:seq(1,round(math:pow(2,L))*round(math:pow(2,L)))].
+
 iter(_,_,0) -> [];
 iter(L,Length,C) ->
 	S=gra:sasiedzi(L,C,Length),
@@ -16,16 +20,16 @@ iter(L,Length,C) ->
 	if
 		E=="1" ->
 				if
-					S==2 -> "1"++iter(L,Length,C-1);
-					S==3 -> "1"++iter(L,Length,C-1);
-					S<2  -> "0"++iter(L,Length,C-1);
-					S>3  -> "0"++iter(L,Length,C-1)
+					S==2 -> iter(L,Length,C-1)++"1";
+					S==3 -> iter(L,Length,C-1)++"1";
+					S<2  -> iter(L,Length,C-1)++"0";
+					S>3  -> iter(L,Length,C-1)++"0"
 				end;
 		E=="0" ->
 				if
-					S==3 -> "1"++iter(L,Length,C-1);
-					S<3  -> "0"++iter(L,Length,C-1);
-					S>3  -> "0"++iter(L,Length,C-1)
+					S==3 -> iter(L,Length,C-1)++"1";
+					S<3  -> iter(L,Length,C-1)++"0";
+					S>3  -> iter(L,Length,C-1)++"0"
 				end
 	end.
 
@@ -43,6 +47,7 @@ sasiedzi(M,I,L) ->
 		true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
 	string:sub_string(M,I-L,I-L)++string:sub_string(M,I+L,I+L)++string:sub_string(M,I-L-1,I-L-1)++string:sub_string(M,I-L+1,I-L+1)++
 	string:sub_string(M,I+L+1,I+L+1)++string:sub_string(M,I+L-1,I+L-1),
+	%% io:format("~s~n",[A]),
 	lists:sum(konw(A))
 	end.
 
@@ -57,16 +62,19 @@ pokaz(D,L,LL) ->
 			pokaz(D,L,LL+L)
 	end.
 	
-%% Póki co chyba dzia³a to tak : zapisuje do pliku napis, otwiera plik odczytuje dane o rozmiarze 256, wyœwietla w formie tablicy,  
-%% Wykonuje jedn¹ iteracje na tym napisie i wyœwietla w formie tablicy oraz zamyka plik
+%% 
 	
 licz() ->
-	lifeio:testWrite(8),
-	{D,_}=lifeio:lifeRead("fff.gz"),
-	{T}=lifeio:readData(D,256),
+	%%lifeio:testWrite(8),
+	%%{D,_}=lifeio:lifeRead("fff.gz"),
+	%%{T}=lifeio:readData(D,256),
+	
+	T=gra:generujTab(4),
 	gra:pokaz(T,16,1),
 	W=gra:iter(T,16,256),
-	gra:pokaz(W,16,1),
-	file:close(D).
+	gra:pokaz(gra:iter(W,16,256),16,1),
+	gra:pokaz(gra:iter(gra:iter(W,16,256),16,256),16,1).
+
+	%%file:close(D).
 	
 	
