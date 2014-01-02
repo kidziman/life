@@ -1,17 +1,22 @@
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
 %% 
 
 
-%% oblicza now¹ tablicê - napis , L - stara tablica - napis,
-%% Length - d³ugoœæ wiersza tablicy, C - aktualny indeks ( zaczyna siê od najwiekszego)
+
+
 
 %%generuje losow¹ planszê
+
 generujTab(L) ->
 	[random:uniform(2)+47 || _ <- lists:seq(1,round(math:pow(2,L))*round(math:pow(2,L)))].
+
+	
+%% oblicza now¹ tablicê - napis , L - stara tablica - napis,
+%% Length - d³ugoœæ wiersza tablicy, C - aktualny indeks ( zaczyna siê od najwiekszego)
 
 iter(_,_,0) -> [];
 iter(L,Length,C) ->
@@ -62,18 +67,22 @@ pokaz(D,L,LL) ->
 			pokaz(D,L,LL+L)
 	end.
 	
-%% 
+%Wykonuje podan¹ iloœæ iteracji L po tablicy T, o rozmiarze S
 	
+loop_iter(T,0,S) -> gra:pokaz(T,round(math:sqrt(S)),1);
+loop_iter(T,L,S) ->
+	W=gra:iter(T,round(math:sqrt(S)),S),
+	gra:pokaz(T,round(math:sqrt(S)),1),
+	loop_iter(W,L-1,S).
+
+%% 
 licz() ->
 	%%lifeio:testWrite(8),
 	%%{D,_}=lifeio:lifeRead("fff.gz"),
 	%%{T}=lifeio:readData(D,256),
 	
-	T=gra:generujTab(4),
-	gra:pokaz(T,16,1),
-	W=gra:iter(T,16,256),
-	gra:pokaz(gra:iter(W,16,256),16,1),
-	gra:pokaz(gra:iter(gra:iter(W,16,256),16,256),16,1).
+	T=gra:generujTab(6),
+    loop_iter(T,10,64*64).
 
 	%%file:close(D).
 	

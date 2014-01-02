@@ -1,5 +1,5 @@
 -module(lifeio).
--export([lifeRead/1,readData/2,lifeWrite/2,writeData/2,testWrite/1,testRead/1]).
+-export([lifeRead/1,readData/2,lifeWrite/2,writeData/2,testWrite/1,testRead/1,zapisz/3]).
 
 %% Kod ze strony z laboratorium (zmodyfikowany)
 
@@ -35,7 +35,7 @@ writeData(FD,Data) ->
 %% o wskazanym rozmiarze
 testWrite(Size) ->
 		Len = trunc(math:pow(2,Size)),
-		{ok,FD} = lifeWrite('fff.gz',8),
+		{ok,FD} = lifeWrite('aktualna.gz',Size),
 		file:write(FD,[Size]),
 		feedData(FD,Len,Len),
 		file:close(FD).
@@ -60,3 +60,12 @@ getData(_FD,_Len,0) -> ok;
 getData(FD,Len,Count) ->
 		readData(FD,Len),
 		getData(FD,Len,Count-1).
+	
+	
+%zapisuje planszę Data o rozmiarze - wykładnik potęgi 2 , do pliku o sciezce SC
+	
+zapisz(SC,Data,SIZE)  ->
+	{ok,FD}=lifeWrite(SC,SIZE),
+	file:write(FD,[SIZE]),
+	file:write(FD,Data),
+	file:close(FD).
