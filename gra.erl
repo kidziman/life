@@ -1,5 +1,7 @@
+%%Projekt z pwir
+
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
@@ -82,8 +84,23 @@ licz() ->
 	%%{T}=lifeio:readData(D,256),
 	
 	T=gra:generujTab(6),
-    loop_iter(T,10,64*64).
+    loop_iter(T,20,64*64).
 
 	%%file:close(D).
 	
+
+%%-----------------------------------------------------------------------------------------------------------------------------
+%% 
+
+%% funkcja 'kliencka' do spawn
 	
+wezel(0) -> ok;
+wezel(N) ->
+	io:format("gotowy!~n"),
+	W=gen_server:call(graSerw,{jestem,self()}),
+	gen_server:cast(graSerw,{self(),iter(W,4,16)}),
+	wezel(N-1).
+
+	
+
+
