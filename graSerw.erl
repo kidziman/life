@@ -1,4 +1,7 @@
 %%Projekt z pwir
+%%W czasie robienia korzysta³em z:
+%% http://home.agh.edu.pl/~ptm/doku.php
+%% http://blog.bot.co.za/en/article/349/an-erlang-otp-tutorial-for-beginners#.UuQznBCtbIU
 
 -module(graSerw).
 -behaviour(gen_server).
@@ -10,7 +13,7 @@
 -export([stop/0]).
 -export([terminate/2]).
 
--record(state, {count}).
+-record(state, {}).
 
 %------------------------------------------------
 
@@ -18,7 +21,7 @@ odpalamy() ->
 	gen_server:start_link({local,graSerw},graSerw,[],[]).
 	
 stop() ->
-	gen_server:cast(graSerw,stop).
+	gen_server:call(graSerw,stop).
 
 
 	
@@ -31,11 +34,10 @@ wezly_start(N,W) ->
 
 init([]) ->
 	wezly_start(10,[]),
-	{ok, #state{count=0}}.
+	{ok, #state{}}.
 	
 
-terminate(normal,State) ->
-	error_logger:info_msg("konczenie~n"),
+terminate(powod,State) ->
 	ok.
 	
 		
@@ -46,14 +48,11 @@ handle_call({jestem,_}, _From, State) ->
 	
 handle_cast({_,L}, State) ->
    io:format("~s~n",[L]),
-  {noreply,State};
-	
-handle_cast(stop,State) ->
-	{stop,normal,State}.
-	
-handle_info(Info, State) ->      % handle_info deals with out-of-band msgs, ie
-    error_logger:info_msg("~p~n", [Info]), % msgs that weren't sent via cast
-    {noreply, State}.          % or call. Here we simply log such messages.
+  {noreply,State}.
+
+
+handle_info(info, State) ->
+    {noreply, State}.
 	
 
 	

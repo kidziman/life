@@ -1,4 +1,7 @@
 %%Projekt z pwir
+%%W czasie robienia korzysta³em z:
+%% http://home.agh.edu.pl/~ptm/doku.php
+%% http://blog.bot.co.za/en/article/349/an-erlang-otp-tutorial-for-beginners#.UuQznBCtbIU
 
 -module(gra).
 -export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1]).
