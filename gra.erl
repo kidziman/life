@@ -4,7 +4,7 @@
 %% http://blog.bot.co.za/en/article/349/an-erlang-otp-tutorial-for-beginners#.UuQznBCtbIU
 
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1,nextKrotka/1]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
@@ -187,4 +187,33 @@ getNeighbors(K,X,Y) ->
 			end
 end.	
 
+%%wyeksportowaæ nextKrotka/1
 
+%%u¿ycie: K=krotkakrotek(1024). nextKrotka(K).
+
+%%zwraca przysz³y stan komórki o indeksie (X,Y) w krotce K
+nextState(K,X,Y) ->
+	Neigh=getNeighbors(K,X,Y),
+	if element(X,element(Y,K))==0 ->
+		if Neigh==3 -> 1;
+			true -> 0
+		end;
+	true ->
+		if Neigh==2; Neigh==3 -> 1;
+			true -> 0
+		end
+	end.
+	
+
+%%zwraca krotkê po iteracji algorytmu gry	
+nextKrotka(K) ->
+	nastKrotka(1,1,K,K,tuple_size(element(1,K)),tuple_size(K)).
+
+%%wewnetrzna funkcja realizuj¹ca nextKrotka
+nastKrotka(Sz,Wy,K,W,Sz,Wy)-> 
+	setelement(Wy,W,setelement(Sz, element(Wy,W), nextState(K,Sz,Wy)));
+nastKrotka(X,Y,K,W,Sz,Wy)->
+	Wtym=setelement(Y,W,setelement(X, element(Y,W), nextState(K,X,Y))),
+	if X==Sz -> nastKrotka(1,Y+1,K,Wtym,Sz,Wy);
+	true -> nastKrotka(X+1,Y,K,Wtym,Sz,Wy)
+	end.
