@@ -12,8 +12,6 @@
 
 
 
-
-
 %%generuje losow¹ planszê
 
 generujTab(L) ->
@@ -60,8 +58,52 @@ sasiedzi(M,I,L) ->
 	%% io:format("~s~n",[A]),
 	lists:sum(konw(A))
 	end.
-
-
+%% porzucone :(
+%%Zwraca iloœæ s¹siadów punktu o indeksie I, przy d³ugoœci wiersza tablicy W, wysokosci kolumny - H,numer kolumny - C, ilsoc kolumn -mC M - ca³a tablica - napis
+%%malo to wydajne ale uniwersalne
+sasiedzi(M,I,W,H,C,mC) ->
+	if 
+		C==1 ->
+			if
+				I==1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I==H*W-W+1 -> A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
+				I<W ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I>H*W-W+1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
+				I rem W==1 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1)++string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I rem W==0 ->A=string:sub_string(M,I,I), lists:sum(konw(A));
+				true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
+					string:sub_string(M,I-W,I-W)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W+1,I-W+1)++
+					string:sub_string(M,I+W+1,I+W+1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A))
+			end;		
+		C==mC ->
+			if
+				I==W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
+				I==H*W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1), lists:sum(konw(A));
+				I==H*W-W+1 -> A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
+				I<W ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I>H*W-W+1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
+				I rem W==1 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1)++string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I rem W==0 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
+				true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
+					string:sub_string(M,I-W,I-W)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W+1,I-W+1)++
+					string:sub_string(M,I+W+1,I+W+1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A))
+			end;
+		true->
+			if
+				I==1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I==W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
+				I==H*W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1), lists:sum(konw(A));
+				I==H*W-W+1 -> A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
+				I<W ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I>H*W-W+1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
+				I rem W==1 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1)++string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
+				I rem W==0 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
+				true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
+					string:sub_string(M,I-W,I-W)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W+1,I-W+1)++
+					string:sub_string(M,I+W+1,I+W+1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A))
+			end	
+	end.
+%%
 %Pokazuje tablicê, D - napis, L - d³ugoœæ wiersza, LL - aktualna linijka
 
 pokaz(D,L,LL) ->
@@ -101,9 +143,48 @@ wezel(0) -> ok;
 wezel(N) ->
 	io:format("gotowy!~n"),
 	W=gen_server:call(graSerw,{jestem,self()}),
-	gen_server:cast(graSerw,{self(),iter(W,4,16)}),
+	gen_server:cast(graSerw,{self(),iter(W,8,64)}),
 	wezel(N-1).
 
+%%do eksporta do³o¿yæ krotkakrotek/1, listalist/1, getNeighbors/3
+
+%%ma zwracaæ listê list wype³nionych 0/1 o podanym rozmiarze, nie wiem, czy siê przyda	
+listalist(R)->
+	feedData([],R,R).
 	
+feedData(Lista,0,_Len)-> Lista;
+feedData(Lista,Count,Len) ->
+		Data = [random:uniform(2)-1 || _ <- lists:seq(1, Len)],
+		feedData([Data|Lista],Count-1,Len).
+
+%%ma zwracaæ krotkê krotek wype³nionych 0/1 o podanym rozmiarze, nie wiem, czy siê przyda	
+krotkakrotek(R)->
+	feedData2([],R,R).
+	
+feedData2(L,0,_Len)-> list_to_tuple(L);
+feedData2(L,Count,Len) ->
+		Data = list_to_tuple([random:uniform(2)-1 || _ <- lists:seq(1, Len)]),
+		feedData2([Data|L],Count-1,Len).
+		
+%%ilosc ¿ywych s¹siadów dla komórki (X,Y) w krotcekrotek K
+getNeighbors(K,X,Y) ->
+	Sz=tuple_size(element(1,K)),
+	Wy=tuple_size(K),
+		if X==1 ->
+			if Y==1 -> element(2,element(1,K))+element(2,element(2,K))+element(1,element(2,K));
+				Y<Wy -> element(1,element(Y-1,K))+element(2,element(Y-1,K))+element(2,element(Y,K))+element(2,element(Y+1,K))+element(1,element(Y+1,K));
+				true -> element(1,element(Y-1,K))+element(2,element(Y-1,K))+element(2,element(Y,K))
+			end;
+			X==Sz -> 
+			if Y==1 -> element(X-1,element(Y,K))+element(X-1,element(Y+1,K))+element(X,element(Y+1,K));
+				Y==Wy -> element(X-1,element(Y,K))+element(X-1,element(Y-1,K))+element(X,element(Y-1,K));
+				true -> element(X,element(Y-1,K))+element(X-1,element(Y-1,K))+element(X-1,element(Y,K))+element(X-1,element(Y+1,K))+element(X,element(Y+1,K))
+			end;
+			true ->
+			if Y==1 -> element(X-1,element(Y,K))+element(X-1,element(Y+1,K))+element(X,element(Y+1,K))+element(X+1,element(Y+1,K))+element(X+1,element(Y,K));
+				Y==Wy -> element(X-1,element(Y,K))+element(X-1,element(Y-1,K))+element(X,element(Y-1,K))+element(X+1,element(Y-1,K))+element(X+1,element(Y,K));
+				true ->	element(X-1,element(Y-1,K))+element(X,element(Y-1,K))+element(X+1,element(Y-1,K))+element(X+1,element(Y,K))+element(X+1,element(Y+1,K))+element(X,element(Y+1,K))+element(X-1,element(Y+1,K))+element(X-1,element(Y,K))
+			end
+end.	
 
 
