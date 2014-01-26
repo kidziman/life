@@ -4,13 +4,16 @@
 %% http://blog.bot.co.za/en/article/349/an-erlang-otp-tutorial-for-beginners#.UuQznBCtbIU
 
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1,nextKrotka/1]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1,krotkakrotek/1, listalist/1, nextLista/1, nextKrotka/1]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
 %% 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Podejœcie "napisowe"
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%generuje losow¹ planszê
 
@@ -134,21 +137,11 @@ licz() ->
 	%%file:close(D).
 	
 
-%%-----------------------------------------------------------------------------------------------------------------------------
-%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Podejœcie "listowe" (plansza=lista list)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% funkcja 'kliencka' do spawn
-	
-wezel(0) -> ok;
-wezel(N) ->
-	io:format("gotowy!~n"),
-	W=gen_server:call(graSerw,{jestem,self()}),
-	gen_server:cast(graSerw,{self(),iter(W,8,64)}),
-	wezel(N-1).
-
-%%do eksporta do³o¿yæ krotkakrotek/1, listalist/1, getNeighbors/3
-
-%%ma zwracaæ listê list wype³nionych 0/1 o podanym rozmiarze, nie wiem, czy siê przyda	
+%%zwraca listê list wype³nionych 0/1 o podanym rozmiarze,
 listalist(R)->
 	feedData([],R,R).
 	
@@ -157,7 +150,53 @@ feedData(Lista,Count,Len) ->
 		Data = [random:uniform(2)-1 || _ <- lists:seq(1, Len)],
 		feedData([Data|Lista],Count-1,Len).
 
-%%ma zwracaæ krotkê krotek wype³nionych 0/1 o podanym rozmiarze, nie wiem, czy siê przyda	
+
+		
+		
+%%oblicza NumGen ilosc iteracji dla listy list L, o rozmiarze NrowsXNCols, ale synchronizuj¹c po ka¿dej iteracji tego nie potrzebujemy
+%%iteruj(L, Nrows, Ncols, 0) ->
+%%    L;
+%%iteruj(L, Nrows, Ncols, Numgen) ->
+%%    iteruj(lifeOnce(Ncols, L), Nrows, Ncols, Numgen - 1).
+
+%%oblicza pojedyncz¹ iteracjê dla listy list L, nie musi byæ "kwadratowa"
+nextLista(L) ->
+    nastLista(lifePad(length(hd(L)), L)).
+
+%%rozszerza listê o zera na brzegach, ¿eby siê nie bawiæ w przypadki
+lifePad(Ncols, L) ->
+    [lists:duplicate(Ncols + 2, 0) |
+        lists:append(lists:map(fun lifePadRow/1, L),
+            [lists:duplicate(Ncols + 2, 0)])].
+
+lifePadRow(Row) ->
+    [0 | lists:append(Row, [0])].
+
+%%realizuje funkcjê nextLista
+nastLista([X,Y,Z|W]) ->
+    [nextRow(X, Y, Z) | nastLista([Y,Z|W])];
+nastLista(_) ->
+    [].
+
+%%oblicza nastepny stan pojedynczego wiersz z listy list
+nextRow([A,B,C|X], [D,E,F|Y], [G,H,I|Z]) ->
+    [nextCell(A, B, C, D, E, F, G, H, I) | nextRow([B,C|X], [E,F|Y], [H,I|Z])];
+nextRow(_, _, _) ->
+    [].
+
+%%Oblicza nastêpny stan dla komórki E z reszt¹ s¹siadów
+nextCell(A, B, C, D, E, F, G, H, I) ->
+    nastCell(E, A+B+C+D+F+G+H+I).
+
+%%realizuje nextCell
+nastCell(0, Neigh) when Neigh =:= 3 -> 1;
+nastCell(1, Neigh) when Neigh >= 2, Neigh =< 3 -> 1;
+nastCell(Self, Neigh) when (Self =:= 0 orelse Self =:= 1), (Neigh >= 0 andalso Neigh =< 8) -> 0.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Podejœcie "krotkowe", pewnie do wywalenia
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%zwraca krotkê krotek wype³nionych 0/1 o podanym rozmiarze, nie wiem, czy siê przyda	
 krotkakrotek(R)->
 	feedData2([],R,R).
 	
@@ -185,11 +224,7 @@ getNeighbors(K,X,Y) ->
 				Y==Wy -> element(X-1,element(Y,K))+element(X-1,element(Y-1,K))+element(X,element(Y-1,K))+element(X+1,element(Y-1,K))+element(X+1,element(Y,K));
 				true ->	element(X-1,element(Y-1,K))+element(X,element(Y-1,K))+element(X+1,element(Y-1,K))+element(X+1,element(Y,K))+element(X+1,element(Y+1,K))+element(X,element(Y+1,K))+element(X-1,element(Y+1,K))+element(X-1,element(Y,K))
 			end
-end.	
-
-%%wyeksportowaæ nextKrotka/1
-
-%%u¿ycie: K=krotkakrotek(1024). nextKrotka(K).
+end.
 
 %%zwraca przysz³y stan komórki o indeksie (X,Y) w krotce K
 nextState(K,X,Y) ->
@@ -203,9 +238,8 @@ nextState(K,X,Y) ->
 			true -> 0
 		end
 	end.
-	
 
-%%zwraca krotkê po iteracji algorytmu gry	
+%%zwraca krotkê po iteracji algorytmu gry, schodzi jej to d³ugo
 nextKrotka(K) ->
 	nastKrotka(1,1,K,K,tuple_size(element(1,K)),tuple_size(K)).
 
@@ -217,3 +251,15 @@ nastKrotka(X,Y,K,W,Sz,Wy)->
 	if X==Sz -> nastKrotka(1,Y+1,K,Wtym,Sz,Wy);
 	true -> nastKrotka(X+1,Y,K,Wtym,Sz,Wy)
 	end.
+
+%%-----------------------------------------------------------------------------------------------------------------------------
+%% 
+
+%% funkcja 'kliencka' do spawn
+	
+wezel(0) -> ok;
+wezel(N) ->
+	io:format("gotowy!~n"),
+	W=gen_server:call(graSerw,{jestem,self()}),
+	gen_server:cast(graSerw,{self(),iter(W,8,64)}),
+	wezel(N-1).
