@@ -13,7 +13,7 @@
 -export([stop/0]).
 -export([terminate/2]).
 
--record(state, {}).
+-record(stanS, {pidy,tablica}).
 
 %------------------------------------------------
 
@@ -34,7 +34,7 @@ wezly_start(N,W) ->
 
 init([]) ->
 	wezly_start(10,[]),
-	{ok, #state{}}.
+	{ok, #stanS{pidy=[],tablica=[]}}.
 	
 
 terminate(powod,State) ->
@@ -42,8 +42,8 @@ terminate(powod,State) ->
 	
 		
 handle_call({jestem,_}, _From, State) ->
-	Rep="1101111111111101",
-	io:format("1101111111111101~n",[]),
+	Rep="tablica_serwer",
+	io:format("tablica_serwer~n",[]),
 	{reply,Rep,State}.
 	
 handle_cast({_,L}, State) ->

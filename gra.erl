@@ -261,5 +261,5 @@ wezel(0) -> ok;
 wezel(N) ->
 	io:format("gotowy!~n"),
 	W=gen_server:call(graSerw,{jestem,self()}),
-	gen_server:cast(graSerw,{self(),iter(W,8,64)}),
+	gen_server:cast(graSerw,{self(),"tablica_procesik"}),
 	wezel(N-1).
