@@ -4,7 +4,7 @@
 %% http://blog.bot.co.za/en/article/349/an-erlang-otp-tutorial-for-beginners#.UuQznBCtbIU
 
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/0,krotkakrotek/1, listalist/1, nextLista/1, nextKrotka/1]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/0,krotkakrotek/1, listalist/1, nextLista/1, nextKrotka/1,wyswietl/1]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
@@ -61,52 +61,6 @@ sasiedzi(M,I,L) ->
 	%% io:format("~s~n",[A]),
 	lists:sum(konw(A))
 	end.
-%% porzucone :(
-%%Zwraca iloœæ s¹siadów punktu o indeksie I, przy d³ugoœci wiersza tablicy W, wysokosci kolumny - H,numer kolumny - C, ilsoc kolumn -mC M - ca³a tablica - napis
-%%malo to wydajne ale uniwersalne
-sasiedzi(M,I,W,H,C,mC) ->
-	if 
-		C==1 ->
-			if
-				I==1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I==H*W-W+1 -> A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
-				I<W ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I>H*W-W+1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
-				I rem W==1 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1)++string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I rem W==0 ->A=string:sub_string(M,I,I), lists:sum(konw(A));
-				true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
-					string:sub_string(M,I-W,I-W)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W+1,I-W+1)++
-					string:sub_string(M,I+W+1,I+W+1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A))
-			end;		
-		C==mC ->
-			if
-				I==W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
-				I==H*W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1), lists:sum(konw(A));
-				I==H*W-W+1 -> A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
-				I<W ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I>H*W-W+1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
-				I rem W==1 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1)++string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I rem W==0 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
-				true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
-					string:sub_string(M,I-W,I-W)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W+1,I-W+1)++
-					string:sub_string(M,I+W+1,I+W+1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A))
-			end;
-		true->
-			if
-				I==1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I==W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
-				I==H*W ->A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1), lists:sum(konw(A));
-				I==H*W-W+1 -> A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
-				I<W ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I>H*W-W+1 ->A=string:sub_string(M,I+1,I+1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1), lists:sum(konw(A));
-				I rem W==1 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W+1,I-W+1)++string:sub_string(M,I+1,I+1)++string:sub_string(M,I+W+1,I+W+1), lists:sum(konw(A));
-				I rem W==0 ->A=string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W,I-W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-1,I-1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A));
-				true -> A=string:sub_string(M,I-1,I-1)++string:sub_string(M,I+1,I+1)++
-					string:sub_string(M,I-W,I-W)++string:sub_string(M,I+W,I+W)++string:sub_string(M,I-W-1,I-W-1)++string:sub_string(M,I-W+1,I-W+1)++
-					string:sub_string(M,I+W+1,I+W+1)++string:sub_string(M,I+W-1,I+W-1), lists:sum(konw(A))
-			end	
-	end.
-%%
 %Pokazuje tablicê, D - napis, L - d³ugoœæ wiersza, LL - aktualna linijka
 
 pokaz(D,L,LL) ->
@@ -115,8 +69,9 @@ pokaz(D,L,LL) ->
 			P=string:sub_string(D,LL,LL+L-1),
 			io:format("~s~n",[P]),
 			pokaz(D,L,LL+L)
-	end.
-	
+end.
+
+
 %Wykonuje podan¹ iloœæ iteracji L po tablicy T, o rozmiarze S
 	
 loop_iter(T,0,S) -> gra:pokaz(T,round(math:sqrt(S)),1);
@@ -150,8 +105,16 @@ feedData(Lista,Count,Len) ->
 		Data = [random:uniform(2)-1 || _ <- lists:seq(1, Len)],
 		feedData([Data|Lista],Count-1,Len).
 
+%%wyswietla liste-list
 
-		
+wyswietl([H|R])->	
+	lists:foreach(fun(X) -> io:format("~w",[X]) end,H),
+	io:format("~n"),
+	wyswietl(R);
+wyswietl([])->io:format("~n",[]).
+
+
+
 		
 %%oblicza NumGen ilosc iteracji dla listy list L, o rozmiarze NrowsXNCols, ale synchronizuj¹c po ka¿dej iteracji tego nie potrzebujemy
 %%iteruj(L, Nrows, Ncols, 0) ->
