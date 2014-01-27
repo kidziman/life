@@ -12,7 +12,7 @@
 -export([init/1,handle_call/3,handle_cast/2,handle_info/2]).
 -export([stop/0]).
 -export([terminate/2]).
--export([generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,wyswietlPlansze/0]).
+-export([generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,next/0,wyswietlPlansze/0]).
 -record(stanS, {pidy,tablica,nr,indeksOst,time}).
 
 %------------------------------------------------
@@ -35,7 +35,7 @@ wczytaj_mi_plansze(Plik) ->
 zapisz_mi_plansze(Plik) ->
 	gen_server:cast(graSerw,{zapiszPlansze,Plik},infinity).
 
-chlopaki_liczymy() ->
+next() ->
 	gen_server:call(graSerw,liczymy,infinity).
 
 wyswietlPlansze()	->
