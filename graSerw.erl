@@ -13,7 +13,7 @@
 -export([stop/0]).
 -export([terminate/2]).
 -export([generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,wyswietlPlansze/0]).
--record(stanS, {pidy,tablica,nr,indeksOst}).
+-record(stanS, {pidy,tablica,nr,indeksOst,time}).
 
 %------------------------------------------------
 
@@ -24,22 +24,22 @@ stop() ->
 	gen_server:call(graSerw,stop).
 
 generuj_plansze(Roz) ->
-	gen_server:call(graSerw,{zrobPlansze,Roz}).
+	gen_server:call(graSerw,{zrobPlansze,Roz},infinity).
 	
 pokaz_stan() ->
-	gen_server:call(graSerw,pokazStan).	
+	gen_server:call(graSerw,pokazStan,infinity).	
 	
 wczytaj_mi_plansze(Plik) ->
-	gen_server:call(graSerw,{wczytajPlansze,Plik}).
+	gen_server:call(graSerw,{wczytajPlansze,Plik},infinity).
 	
 zapisz_mi_plansze(Plik) ->
-	gen_server:cast(graSerw,{zapiszPlansze,Plik}).
+	gen_server:cast(graSerw,{zapiszPlansze,Plik},infinity).
 
 chlopaki_liczymy() ->
-	gen_server:call(graSerw,liczymy).
+	gen_server:call(graSerw,liczymy,infinity).
 
 wyswietlPlansze()	->
-	gen_server:call(graSerw,wyswietlPlansze).
+	gen_server:call(graSerw,wyswietlPlansze,infinity).
 
 wyswietl([H|R])->	
 	lists:foreach(fun(X) -> io:format("~w",[X]) end,H),
@@ -70,7 +70,7 @@ rozdzielwew(Lista,[HPidy|TPidy],Podzial,Zalatwione,Indeks) ->
 
 zamienE(Lista,Kawalek,Indeks) -> 
 	A=lists:sublist(Lista,Indeks-1), 
-	B=tl(lists:sublist(Lista,Indeks,length(Lista))), 
+	B=lists:sublist(Lista,Indeks+length(Kawalek),length(Lista)), 
 	C=A++Kawalek++B,
 	C.
 %---------------------------------------------
@@ -82,7 +82,7 @@ wezly_start(N,W) ->
 
 init([]) ->
 	W=wezly_start(10,[]),
-	{ok, #stanS{pidy=W,tablica=[],nr=0,indeksOst=0}}.
+	{ok, #stanS{pidy=W,tablica=[],nr=0,indeksOst=0,time=0}}.
 	
 
 terminate(powod,_State) ->
@@ -98,19 +98,20 @@ handle_call({jestem,_}, _From, State) ->
 handle_call({wczytajPlansze,Nazwa},_From,State) ->
 	Tab=lifeio:wczytajListe(Nazwa),
 	Rep='wczytane',
-	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,indeksOst=State#stanS.indeksOst}};
+	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,indeksOst=State#stanS.indeksOst,time=State#stanS.time}};
 
 handle_call(wyswietlPlansze,_From,State) ->
 		wyswietl(State#stanS.tablica),
 		{reply,wyswietlilem,State};
 
 handle_call(liczymy,_From,State) ->
+	T1=now(),
 	T=State#stanS.tablica,
 	P=State#stanS.pidy,
 	%%Bl=round(length(T)/length(P)),
 	%%rozeslij(P,T,P,Bl), 
 	InOst=rozeslij2(T,P),
-	{reply,'done',#stanS{pidy=State#stanS.pidy,tablica=State#stanS.tablica,nr=State#stanS.nr,indeksOst=InOst}};
+	{reply,'done',#stanS{pidy=State#stanS.pidy,tablica=State#stanS.tablica,nr=State#stanS.nr,indeksOst=InOst,time=T1}};
 	
 handle_call(pokazStan,_From,State) ->
 	{reply,State,State};
@@ -118,7 +119,7 @@ handle_call(pokazStan,_From,State) ->
 handle_call({zrobPlansze,R},_From,State) ->
 	Tab=gra:listalist(R),
 	Rep='done',
-	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,indeksOst=State#stanS.indeksOst}}.
+	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,indeksOst=State#stanS.indeksOst,time=State#stanS.time}}.
 
 	
 	
@@ -132,18 +133,23 @@ handle_cast({oddaj,Kawalek,Indeks}, State) ->
    Tab=State#stanS.tablica,
    if
 	Indeks==1 ->
-		Nowa=zamienE(Tab,Kawalek,Indeks);
+		Nowa=lists:sublist(Kawalek,length(Kawalek)-1)++lists:sublist(Tab,length(Kawalek),length(Tab));
 	Indeks==State#stanS.indeksOst ->
-		Nowa=zamienE(Tab,tl(Kawalek),Indeks+1);
-	true -> %% czyli kawa³ek jest wewn¹trz tablicy, nie na brzegu
+		Nowa=lists:sublist(Tab,length(Tab)-length(Kawalek)+1)++tl(Kawalek);
+	Indeks>1; Indeks<State#stanS.indeksOst -> %% czyli kawa³ek jest wewn¹trz tablicy, nie na brzegu
+		io:format("Jestem w true~n"),
 		Nowa=zamienE(Tab,tl(lists:sublist(Kawalek,length(Kawalek)-1)),Indeks+1)
 	end,
+	io:format("rozmiar tablicy ~p, a indeks to ~p, a maxIndex=~p~n",[length(Nowa),Indeks,State#stanS.indeksOst]),
    if
 		State#stanS.nr+1==length(State#stanS.pidy) -> %%czyli mam wszystkie kawalki jednej iteracji
+			T2=now(),	
+			Td=timer:now_diff(T2, State#stanS.time),
+			io:format("czas~w~n",[Td]),
 			io:format("Catch'em all~n"),
 			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Nowa,nr=0,indeksOst=0}};
 		true -> %% czyli jeszcze nie wszystko siê policzy³o
-			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Nowa,nr=State#stanS.nr+1,indeksOst=State#stanS.indeksOst}}
+			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Nowa,nr=State#stanS.nr+1,indeksOst=State#stanS.indeksOst,time=State#stanS.time}}
    end.
 
 
