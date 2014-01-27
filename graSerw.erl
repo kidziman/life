@@ -13,7 +13,7 @@
 -export([stop/0]).
 -export([terminate/2]).
 -export([rozeslij2/2,generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,rozeslij/4]).
--record(stanS, {pidy,tablica,nr,blkroz}).
+-record(stanS, {pidy,tablica,nr,indeksOst}).
 
 %------------------------------------------------
 
@@ -39,7 +39,7 @@ chlopaki_liczymy() ->
 	gen_server:call(graSerw,liczymy).
 	
 rozeslij([],Tab,W,Bl) -> rozeslij(W,Tab,W,Bl);	
-rozeslij(_,[],W,Bl) -> ok;	
+rozeslij(_,[],_W,_) -> ok;	
 rozeslij(Pidy,Tab,W,Bl) ->
 	[A|B]=Pidy,
 	ATab=lists:sublist(Tab,Bl),
@@ -53,12 +53,17 @@ rozeslij2(Lista,Pidy)->	%% zak³adam, ¿e lista to lista list, a pidy to lista.
 	rozdzielwew(Lista,Pidy,Podzial,length(Pidy),1).
 
 rozdzielwew(Lista,Pidy,_Podzial,1,Indeks)->
-	hd(Pidy) ! {lists:sublist(Lista,Indeks,length(Lista)), Indeks};
+	hd(Pidy) ! {lists:sublist(Lista,Indeks,length(Lista)), Indeks},
+	Indeks;
 rozdzielwew(Lista,[HPidy|TPidy],Podzial,Zalatwione,Indeks) ->
 	HPidy ! {lists:sublist(Lista,Indeks,Podzial+1), Indeks},
 	rozdzielwew(Lista,TPidy,Podzial,Zalatwione-1,Indeks+Podzial).
-	
-	
+
+zamienE(Lista,Kawalek,Indeks) -> 
+	A=lists:sublist(Lista,Indeks-1), 
+	B=tl(lists:sublist(Lista,Indeks,length(Lista))), 
+	C=A++[Kawalek]++B,
+	C.
 %---------------------------------------------
 
 wezly_start(0,W) -> W;
@@ -68,11 +73,11 @@ wezly_start(N,W) ->
 
 init([]) ->
 	W=wezly_start(10,[]),
-	{ok, #stanS{pidy=W,tablica=[],nr=0,blkroz=0}}.
+	{ok, #stanS{pidy=W,tablica=[],nr=0,indeksOst=0}}.
 	
 
-terminate(powod,State) ->
-	ok.
+terminate(powod,_State) ->
+	ok_terminuje_sie.
 	
 		
 handle_call({jestem,_}, _From, State) ->
@@ -84,15 +89,15 @@ handle_call({jestem,_}, _From, State) ->
 handle_call({wczytajPlansze,Nazwa},_From,State) ->
 	Tab=lifeio:wczytajListe(Nazwa),
 	Rep='wczytane',
-	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,blkroz=State#stanS.blkroz}};
+	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,indeksOst=State#stanS.indeksOst}};
 
 handle_call(liczymy,_From,State) ->
 	T=State#stanS.tablica,
 	P=State#stanS.pidy,
 	%%Bl=round(length(T)/length(P)),
 	%%rozeslij(P,T,P,Bl), 
-	rozeslij2(T,P),
-	{reply,'done',#stanS{pidy=State#stanS.pidy,tablica=State#stanS.tablica,nr=State#stanS.nr,blkroz=Bl}};
+	InOst=rozeslij2(T,P),
+	{reply,'done',#stanS{pidy=State#stanS.pidy,tablica=State#stanS.tablica,nr=State#stanS.nr,indeksOst=InOst}};
 	
 handle_call(pokazStan,_From,State) ->
 	{reply,State,State};
@@ -100,7 +105,7 @@ handle_call(pokazStan,_From,State) ->
 handle_call({zrobPlansze,R},_From,State) ->
 	Tab=gra:listalist(R),
 	Rep='done',
-	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,blkroz=State#stanS.blkroz}}.
+	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,indeksOst=State#stanS.indeksOst}}.
 
 	
 	
@@ -109,18 +114,23 @@ handle_cast({zapiszPlansze,Nazwa},State) ->
 	lifeio:zapiszListe(State#stanS.tablica,Nazwa),
 	{noreply, State};
 	
-handle_cast({oddaj,L,Indeks}, State) ->
-   io:format("~s~n",[L]),
+handle_cast({oddaj,Kawalek,Indeks}, State) ->
+   io:format("Dosta³em kawalek~n"),
    Tab=State#stanS.tablica,
-   Tab2=lists:append(Tab,L),
-   Broz=State#stanS.blkroz,
    if
-		State#stanS.nr==length(Tab)-Broz -> 
-								io:format("---------------------------~n",[]),
-								%gen_server:call(graSerw,liczymy),
-								{noreply,#stanS{pidy=State#stanS.pidy,tablica=Tab2,nr=State#stanS.nr}};
-		true ->
-			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Tab2,nr=State#stanS.nr+Broz,blkroz=State#stanS.blkroz}}
+	Indeks==1 ->
+		Nowa=zamienE(Tab,Kawalek,Indeks);
+	Indeks==State#stanS.indeksOst ->
+		Nowa=zamienE(Tab,tl(Kawalek),Indeks+1);
+	true -> %% czyli kawa³ek jest wewn¹trz tablicy, nie na brzegu
+		Nowa=zamienE(Tab,tl(lists:sublist(Kawalek,length(Kawalek)-1)),Indeks+1)
+	end,
+   if
+		State#stanS.nr+1==length(State#stanS.pidy) -> %%czyli mam wszystkie kawalki jednej iteracji
+			io:format("Catch'em all~n"),
+			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Nowa,nr=State#stanS.nr+1,indeksOst=State#stanS.indeksOst}};	
+		true -> %% czyli jeszcze nie wszystko siê policzy³o
+			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Nowa,nr=0,indeksOst=0}}
    end.
 
 
