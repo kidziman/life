@@ -12,8 +12,8 @@
 -export([init/1,handle_call/3,handle_cast/2,handle_info/2]).
 -export([stop/0]).
 -export([terminate/2]).
--export([zrob_mi_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,rozeslij/2]).
--record(stanS, {pidy,tablica,nr}).
+-export([generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,rozeslij/4]).
+-record(stanS, {pidy,tablica,nr,blkroz}).
 
 %------------------------------------------------
 
@@ -23,7 +23,7 @@ odpalamy() ->
 stop() ->
 	gen_server:call(graSerw,stop).
 
-zrob_mi_plansze(Roz) ->
+generuj_plansze(Roz) ->
 	gen_server:call(graSerw,{zrobPlansze,Roz}).
 	
 pokaz_stan() ->
@@ -37,24 +37,25 @@ zapisz_mi_plansze(Plik) ->
 
 chlopaki_liczymy() ->
 	gen_server:call(graSerw,liczymy).
-
-rozeslij([],_) -> ok;	
-rozeslij(_,[]) -> ok;	
-rozeslij(Pidy,Tab) ->
+	
+rozeslij([],Tab,W,Bl) -> rozeslij(W,Tab,W,Bl);	
+rozeslij(_,[],W,Bl) -> ok;	
+rozeslij(Pidy,Tab,W,Bl) ->
 	[A|B]=Pidy,
-	[ATab|BTab]=Tab,
+	ATab=lists:sublist(Tab,Bl),
+	BTab=lists:sublist(Tab,Bl+1,length(Tab)),
 	A! ATab,
-	rozeslij(B,BTab).
+	rozeslij(B,BTab,W,Bl).
 %---------------------------------------------
 
 wezly_start(0,W) -> W;
 wezly_start(N,W) ->
-	P=spawn_link(gra,wezel,[1]),
+	P=spawn_link(gra,wezel,[]),
 	wezly_start(N-1,lists:append(W,[P])).
 
 init([]) ->
 	W=wezly_start(10,[]),
-	{ok, #stanS{pidy=W,tablica=[],nr=0}}.
+	{ok, #stanS{pidy=W,tablica=[],nr=0,blkroz=0}}.
 	
 
 terminate(powod,State) ->
@@ -70,13 +71,14 @@ handle_call({jestem,_}, _From, State) ->
 handle_call({wczytajPlansze,Nazwa},_From,State) ->
 	Tab=lifeio:wczytajListe(Nazwa),
 	Rep='wczytane',
-	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr}};
+	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,blkroz=State#stanS.blkroz}};
 
 handle_call(liczymy,_From,State) ->
 	T=State#stanS.tablica,
 	P=State#stanS.pidy,
-	rozeslij(P,T), 
-	{reply,'done',State};
+	Bl=round(length(T)/length(P)),
+	rozeslij(P,T,P,Bl), 
+	{reply,'done',#stanS{pidy=State#stanS.pidy,tablica=State#stanS.tablica,nr=State#stanS.nr,blkroz=Bl}};
 	
 handle_call(pokazStan,_From,State) ->
 	{reply,State,State};
@@ -84,26 +86,27 @@ handle_call(pokazStan,_From,State) ->
 handle_call({zrobPlansze,R},_From,State) ->
 	Tab=gra:listalist(R),
 	Rep='done',
-	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr}}.
+	{reply,Rep,#stanS{pidy=State#stanS.pidy,tablica=Tab,nr=State#stanS.nr,blkroz=State#stanS.blkroz}}.
 
 	
 	
 	
 handle_cast({zapiszPlansze,Nazwa},State) ->
-	lifeio:zapiszListe(Nazwa),
+	lifeio:zapiszListe(State#stanS.tablica,Nazwa),
 	{noreply, State};
 	
 handle_cast({oddaj,L}, State) ->
    io:format("~s~n",[L]),
    Tab=State#stanS.tablica,
    Tab2=lists:append(Tab,L),
+   Broz=State#stanS.blkroz,
    if
-		State#stanS.nr==length(State#stanS.tablica)-1 -> 
+		State#stanS.nr==length(Tab)-Broz -> 
 								io:format("---------------------------~n",[]),
-								gen_server:call(graSerw,liczymy),
-								{noreply,#stanS{pidy=State#stanS.pidy,tablica=Tab2,nr=State#stanS.nr+1}};
+								%gen_server:call(graSerw,liczymy),
+								{noreply,#stanS{pidy=State#stanS.pidy,tablica=Tab2,nr=State#stanS.nr}};
 		true ->
-			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Tab2,nr=State#stanS.nr+1}}
+			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Tab2,nr=State#stanS.nr+Broz,blkroz=State#stanS.blkroz}}
    end.
 
 

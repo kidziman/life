@@ -4,7 +4,7 @@
 %% http://blog.bot.co.za/en/article/349/an-erlang-otp-tutorial-for-beginners#.UuQznBCtbIU
 
 -module(gra).
--export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/1,krotkakrotek/1, listalist/1, nextLista/1, nextKrotka/1]).
+-export([iter/3,licz/0,sasiedzi/3,konw/1,pokaz/3,generujTab/1,loop_iter/3,wezel/0,krotkakrotek/1, listalist/1, nextLista/1, nextKrotka/1]).
 
 %%
 %% Autorzy projektu (dopisaæ tutaj):
@@ -257,12 +257,12 @@ nastKrotka(X,Y,K,W,Sz,Wy)->
 
 %% funkcja 'kliencka' do spawn
 	
-wezel(0) -> ok;
-wezel(N) ->
+
+wezel() ->
 	io:format("gotowy!~n"),
 	receive
 		Tab ->
 			gen_server:cast(graSerw,{oddaj,Tab})
 		end,
-	wezel(N-1).
+	wezel().
 
