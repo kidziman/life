@@ -55,7 +55,7 @@ getData(FD,Len,Count,Lista) ->
 
 readData(FD,Length) -> 
 		case file:read(FD,Length) of 
-				{ok,Data} -> Data;
+				{ok,Data} -> [X-48 || X <- Data];
 				eof -> io:format("~nKoniec~n",[]);
 				{error,Reason} -> io:format("~s~n",[Reason])
 		end.
@@ -72,7 +72,7 @@ zapiszListe(Lista,Nazwapliku) ->
 		
 zapiszWiersz(_FD,0,_Lista)-> ok;
 zapiszWiersz(FD,Count,[H|T]) ->
-		writeData(FD,H),
+		writeData(FD,[N+48 || N <- H]),
 		zapiszWiersz(FD,Count-1,T).
 		
 %% otwarcie pliku do zapisu planszy o wskazanym rozmiarze

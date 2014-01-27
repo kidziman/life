@@ -261,8 +261,8 @@ nastKrotka(X,Y,K,W,Sz,Wy)->
 wezel() ->
 	io:format("gotowy!~n"),
 	receive
-		Tab ->
-			gen_server:cast(graSerw,{oddaj,Tab})
+		{Tab,Indeks} ->	%% jak dostanie tablice to liczy i oddaje, nie rusza indeksu
+			gen_server:cast(graSerw,{oddaj,nextLista(Tab),Indeks})
 		end,
 	wezel().
 

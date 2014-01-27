@@ -12,7 +12,7 @@
 -export([init/1,handle_call/3,handle_cast/2,handle_info/2]).
 -export([stop/0]).
 -export([terminate/2]).
--export([generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,rozeslij/4]).
+-export([rozeslij2/2,generuj_plansze/1,pokaz_stan/0,wczytaj_mi_plansze/1,zapisz_mi_plansze/1,chlopaki_liczymy/0,rozeslij/4]).
 -record(stanS, {pidy,tablica,nr,blkroz}).
 
 %------------------------------------------------
@@ -46,6 +46,19 @@ rozeslij(Pidy,Tab,W,Bl) ->
 	BTab=lists:sublist(Tab,Bl+1,length(Tab)),
 	A! ATab,
 	rozeslij(B,BTab,W,Bl).
+	
+%%Ma rozsy³aæ nachodz¹ce na siebie kawa³ki tablicy do policzenia podanym pidom
+rozeslij2(Lista,Pidy)->	%% zak³adam, ¿e lista to lista list, a pidy to lista.
+	Podzial=trunc(length(Lista)/length(Pidy)),
+	rozdzielwew(Lista,Pidy,Podzial,length(Pidy),1).
+
+rozdzielwew(Lista,Pidy,_Podzial,1,Indeks)->
+	hd(Pidy) ! {lists:sublist(Lista,Indeks,length(Lista)), Indeks};
+rozdzielwew(Lista,[HPidy|TPidy],Podzial,Zalatwione,Indeks) ->
+	HPidy ! {lists:sublist(Lista,Indeks,Podzial+1), Indeks},
+	rozdzielwew(Lista,TPidy,Podzial,Zalatwione-1,Indeks+Podzial).
+	
+	
 %---------------------------------------------
 
 wezly_start(0,W) -> W;
@@ -76,8 +89,9 @@ handle_call({wczytajPlansze,Nazwa},_From,State) ->
 handle_call(liczymy,_From,State) ->
 	T=State#stanS.tablica,
 	P=State#stanS.pidy,
-	Bl=round(length(T)/length(P)),
-	rozeslij(P,T,P,Bl), 
+	%%Bl=round(length(T)/length(P)),
+	%%rozeslij(P,T,P,Bl), 
+	rozeslij2(T,P),
 	{reply,'done',#stanS{pidy=State#stanS.pidy,tablica=State#stanS.tablica,nr=State#stanS.nr,blkroz=Bl}};
 	
 handle_call(pokazStan,_From,State) ->
@@ -95,7 +109,7 @@ handle_cast({zapiszPlansze,Nazwa},State) ->
 	lifeio:zapiszListe(State#stanS.tablica,Nazwa),
 	{noreply, State};
 	
-handle_cast({oddaj,L}, State) ->
+handle_cast({oddaj,L,Indeks}, State) ->
    io:format("~s~n",[L]),
    Tab=State#stanS.tablica,
    Tab2=lists:append(Tab,L),
