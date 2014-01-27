@@ -129,7 +129,6 @@ handle_cast({zapiszPlansze,Nazwa},State) ->
 	{noreply, State};
 	
 handle_cast({oddaj,Kawalek,Indeks}, State) ->
-   io:format("Dosta³em kawalek~n"),
    Tab=State#stanS.tablica,
    if
 	Indeks==1 ->
@@ -137,15 +136,14 @@ handle_cast({oddaj,Kawalek,Indeks}, State) ->
 	Indeks==State#stanS.indeksOst ->
 		Nowa=lists:sublist(Tab,length(Tab)-length(Kawalek)+1)++tl(Kawalek);
 	Indeks>1; Indeks<State#stanS.indeksOst -> %% czyli kawa³ek jest wewn¹trz tablicy, nie na brzegu
-		io:format("Jestem w true~n"),
 		Nowa=zamienE(Tab,tl(lists:sublist(Kawalek,length(Kawalek)-1)),Indeks+1)
 	end,
-	io:format("rozmiar tablicy ~p, a indeks to ~p, a maxIndex=~p~n",[length(Nowa),Indeks,State#stanS.indeksOst]),
+	%%io:format("rozmiar tablicy ~p, a indeks to ~p, a maxIndex=~p~n",[length(Nowa),Indeks,State#stanS.indeksOst]),
    if
 		State#stanS.nr+1==length(State#stanS.pidy) -> %%czyli mam wszystkie kawalki jednej iteracji
 			T2=now(),	
 			Td=timer:now_diff(T2, State#stanS.time),
-			io:format("czas~w~n",[Td]),
+			io:format("Czas obliczen: ~w~n",[Td]),
 			io:format("Catch'em all~n"),
 			{noreply,#stanS{pidy=State#stanS.pidy,tablica=Nowa,nr=0,indeksOst=0}};
 		true -> %% czyli jeszcze nie wszystko siê policzy³o
