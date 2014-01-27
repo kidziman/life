@@ -262,7 +262,7 @@ wezel(N) ->
 	io:format("gotowy!~n"),
 	receive
 		Tab ->
-			gen_server:cast(graSerw,{self(),Tab})
+			gen_server:cast(graSerw,{oddaj,Tab})
 		end,
 	wezel(N-1).
 

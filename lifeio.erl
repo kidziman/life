@@ -1,35 +1,8 @@
 -module(lifeio).
--export([lifeRead/1,readData/2,lifeWrite/2,writeData/2,testWrite/1,testRead/1,zapisz/3]).
+-export([zapiszWiersz/3,wczytajListe/1,zapiszListe/2,lifeRead/1,readData/2,lifeWrite/2,writeData/2,testWrite/1,zapisz/3]).
 
-%% Kod ze strony z laboratorium (zmodyfikowany)
+%% modyfikowany kod ze strony z laboratorium 
 
-%% otwarcie pliku do wczytywania
-%% zwracany jest deskryptor pliku i rozmiar danych/planszy
-lifeRead(FileName) ->
-		{ok,FD} = file:open(FileName,[read,compressed]),
-		case file:read(FD,1) of 
-				{ok,[Data]} -> {FD,Data};
-				eof -> io:format("~nKoniec~n",[]);
-				{error,Reason} -> io:format("~s~n",[Reason])
-		end.
-
-%% odczytanie kolejnej porcji danych o żądanym rozmiarze
-readData(FD,Length) -> 
-		case file:read(FD,Length) of 
-				{ok,Data} -> {Data};
-				eof -> io:format("~nKoniec~n",[]);
-				{error,Reason} -> io:format("~s~n",[Reason])
-		end.
-
-%% otwarcie pliku do zapisu planszy o wskazanym rozmiarze
-lifeWrite(FileName,Size)->
-		{ok,FD} = file:open(FileName,[write,compressed]),
-		file:write(FD,Size),
-		{ok,FD}.
-
-%% zapisanie kolejnej porcji danych
-writeData(FD,Data) ->
-		file:write(FD,Data).
 
 %% procedura testowa zapisująca losową plansze
 %% o wskazanym rozmiarze
@@ -46,21 +19,6 @@ feedData(FD,Count,Len) ->
 		writeData(FD,Data),
 		feedData(FD,Count-1,Len).
 
-
-%% procedura testowa odczytująca planszę z pliku
-testRead(FileName) ->
-		{FD,Size} = lifeRead(FileName),
-		Len = trunc(math:pow(2,Size)),
-		io:fwrite("Rozmiar ~B, Plansza ~Bx~B~n",[Size,Len,Len]),
-		getData(FD,Len,Len),
-		file:close(FD).
-
-
-getData(_FD,_Len,0) -> ok;
-getData(FD,Len,Count) ->
-		readData(FD,Len),
-		getData(FD,Len,Count-1).
-	
 	
 %zapisuje planszę Data o rozmiarze - wykładnik potęgi 2 , do pliku o sciezce SC
 	
@@ -69,3 +27,60 @@ zapisz(SC,Data,SIZE)  ->
 	file:write(FD,[SIZE]),
 	file:write(FD,Data),
 	file:close(FD).
+	
+%%-------------------------------------------------------------------------	
+%% procedura testowa odczytująca planszę z pliku
+wczytajListe(FileName) ->
+		{FD,Size} = lifeRead(FileName),
+		Len = trunc(math:pow(2,Size)),
+		io:fwrite("Rozmiar ~B, Plansza ~Bx~B~n",[Size,Len,Len]),
+		Lista=getData(FD,Len,Len,[]),
+		file:close(FD),
+		lists:reverse(Lista).
+
+%% otwarcie pliku do wczytywania
+%% zwracany jest deskryptor pliku i rozmiar danych/planszy
+lifeRead(FileName) ->
+		{ok,FD} = file:open(FileName,[read,compressed]),
+		case file:read(FD,1) of 
+				{ok,[Data]} -> {FD,Data};
+				eof -> io:format("~nKoniec~n",[]);
+				{error,Reason} -> io:format("~s~n",[Reason])
+		end.
+
+getData(_FD,_Len,0,Lista) -> Lista;
+getData(FD,Len,Count,Lista) ->
+		Wiersz=readData(FD,Len),
+		getData(FD,Len,Count-1,[Wiersz|Lista]).
+
+readData(FD,Length) -> 
+		case file:read(FD,Length) of 
+				{ok,Data} -> Data;
+				eof -> io:format("~nKoniec~n",[]);
+				{error,Reason} -> io:format("~s~n",[Reason])
+		end.
+
+%%zapis lilstylist do pliku, zakładam,że kwadratowa,
+%%zapisuje zera i jedynki, jak leci, nie dodając 48.
+zapiszListe(Lista,Nazwapliku) ->
+		Len =length(Lista),
+		Size=trunc(math:log(Len) / math:log(2)),%magia
+		{ok,FD} = lifeWrite(Nazwapliku,Size), %Size to jest wykładnik, np 10 dla tablicy 1024x1024
+		file:write(FD,[Size]),
+		zapiszWiersz(FD,Len,Lista),
+		file:close(FD).
+		
+zapiszWiersz(_FD,0,_Lista)-> ok;
+zapiszWiersz(FD,Count,[H|T]) ->
+		writeData(FD,H),
+		zapiszWiersz(FD,Count-1,T).
+		
+%% otwarcie pliku do zapisu planszy o wskazanym rozmiarze
+lifeWrite(FileName,Size)->
+		{ok,FD} = file:open(FileName,[write,compressed]),
+		file:write(FD,Size),
+		{ok,FD}.
+
+%% zapisanie kolejnej porcji danych
+writeData(FD,Data) ->
+		file:write(FD,Data).
