@@ -131,8 +131,8 @@ licz() ->
 	%%{D,_}=lifeio:lifeRead("fff.gz"),
 	%%{T}=lifeio:readData(D,256),
 	
-	T=gra:generujTab(6),
-    loop_iter(T,20,64*64).
+	T=gra:generujTab(10),
+    loop_iter(T,1,1024*1024).
 
 	%%file:close(D).
 	
@@ -260,6 +260,9 @@ nastKrotka(X,Y,K,W,Sz,Wy)->
 wezel(0) -> ok;
 wezel(N) ->
 	io:format("gotowy!~n"),
-	W=gen_server:call(graSerw,{jestem,self()}),
-	gen_server:cast(graSerw,{self(),"tablica_procesik"}),
+	receive
+		Tab ->
+			gen_server:cast(graSerw,{self(),Tab})
+		end,
 	wezel(N-1).
+
